@@ -1,3 +1,4 @@
+import requests
 import os
 import re
 import fitz  # PyMuPDF
@@ -525,40 +526,62 @@ class OCREngine:
             return []
 
     def analyze_with_vision_ai(self, image_path: str) -> Dict[str, Any]:
-        """Extracción forense de comprobantes con Gemini Flash (coste cero)."""
-        if not self.api_key:
-            return {'error': 'No se configuro GEMINI_API_KEY para Vision por IA.'}
+        """Extracción forense ultra-rápida de comprobantes con Gemini REST API (sin dependencias externas)."""
+        api_key = self.api_key or os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            return {'error': 'No se configuró GEMINI_API_KEY para Vision por IA.'}
 
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            img = Image.open(image_path)
+            import base64
+            with open(image_path, 'rb') as f:
+                b64_data = base64.b64encode(f.read()).decode('utf-8')
 
-            prompt = """
-            Analiza este comprobante o factura de Herbania/Canarias y extrae exactamente en JSON:
-            {
-              "tipo": "SALIDA",
-              "fecha": "YYYY-MM-DD",
-              "concepto": "Nombre del proveedor o emisor",
-              "nif": "CIF o NIF del emisor",
-              "factura": "Numero de factura o ticket",
-              "base_imponible": 0.0,
-              "tipo_impuesto": 7.0,
-              "cuota_impuesto": 0.0,
-              "importe": 0.0,
-              "categoria": "Categoria de gasto (Ferreteria, Combustible, etc.)",
-              "observaciones": "Notas sobre forma de pago o estado"
-            }
-            """
-
-            model = genai.GenerativeModel(
-                model_name='gemini-3.8-flash',
-                generation_config={"response_mime_type": "application/json"}
+            prompt = (
+                "Analiza este comprobante o factura de Herbania/Canarias y extrae exactamente en JSON:\n"
+                "{\n"
+                '  "tipo": "SALIDA",\n'
+                '  "fecha": "YYYY-MM-DD",\n'
+                '  "concepto": "Nombre del proveedor o emisor",\n'
+                '  "nif": "CIF o NIF del emisor",\n'
+                '  "factura": "Numero de factura o ticket",\n'
+                '  "base_imponible": 0.0,\n'
+                '  "tipo_impuesto": 7.0,\n'
+                '  "cuota_impuesto": 0.0,\n'
+                '  "importe": 0.0,\n'
+                '  "categoria": "Categoria de gasto (Ferreteria, Combustible, etc.)",\n'
+                '  "observaciones": "Notas sobre forma de pago o estado"\n'
+                "}"
             )
-            response = model.generate_content([prompt, img])
-            ai_json = json.loads(response.text)
-            ai_json['confianza'] = 'ALTA (Gemini Flash)'
-            return ai_json
+
+            # Cascada de modelos disponibles en Google Gemini
+            model_candidates = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-3.7-flash']
+            
+            for m in model_candidates:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"text": prompt},
+                            {"inline_data": {"mime_type": "image/png", "data": b64_data}}
+                        ]
+                    }],
+                    "generationConfig": {"response_mime_type": "application/json"}
+                }
+                try:
+                    resp = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=12)
+                    if resp.status_code == 200:
+                        res_json = resp.json()
+                        raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                        ai_json = json.loads(raw_text)
+                        ai_json['confianza'] = f'ALTA (Gemini {m})'
+                        return ai_json
+                    else:
+                        print(f"[OCR] Modelo {m} respondio {resp.status_code}, probando alternativa...")
+                except Exception as ex:
+                    print(f"[OCR] Fallo temporal con {m}: {ex}")
+
+            return {'error': 'Los modelos de Gemini en la nube están temporalmente saturados.'}
 
         except Exception as e:
-            return {'error': f'Error en Vision AI (Gemini): {str(e)}'}
+            return {'error': f'Error en Vision AI (Gemini REST): {str(e)}'}
+
