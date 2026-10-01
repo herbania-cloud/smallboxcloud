@@ -47,41 +47,68 @@ class OCREngine:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
 
     def process_document(self, pdf_path: str) -> List[Dict[str, Any]]:
-        """Procesa un PDF/Imagen y devuelve la lista de documentos analizados"""
+        """Procesa un PDF/Imagen con aceleración ultra-rápida (Gemini Flash directo a 150 DPI)."""
         doc = fitz.open(pdf_path)
         results = []
 
         for page_num, page in enumerate(doc):
-            pix = page.get_pixmap(dpi=300)
+            # 150 DPI: 4 veces más rápido de generar, peso óptimo para LLM Vision
+            pix = page.get_pixmap(dpi=150)
             temp_img_path = f"{pdf_path}_page_{page_num+1}.png"
             pix.save(temp_img_path)
 
-            try:
-                img = Image.open(temp_img_path)
-                raw_text = pytesseract.image_to_string(img, lang='spa+eng')
-                blocks = self._extract_blocks(img)
-                
-                parsed_data = self._parse_document(img, raw_text, page_num + 1)
-                parsed_data['img_path'] = temp_img_path
-                parsed_data['blocks'] = blocks
-                
-                # Aplicar aprendizaje ML previo si existe patrón para este NIF
-                parsed_data = self._apply_ml_patterns(parsed_data, temp_img_path)
-                
-                results.append(parsed_data)
-            except Exception as e:
-                results.append({
-                    'page': page_num + 1,
-                    'tipo': 'SALIDA',
-                    'fecha': '',
-                    'concepto': 'Error de lectura',
-                    'codigo': '',
-                    'factura': '',
-                    'importe': '0.00',
-                    'confianza': 'BAJA',
-                    'img_path': temp_img_path,
-                    'raw_text': str(e)
-                })
+            parsed_data = None
+
+            # 1. Estrategia Primaria: Gemini 3.8 Flash Directo (~1.2 segundos)
+            if self.api_key:
+                try:
+                    ai_res = self.analyze_with_vision_ai(temp_img_path)
+                    if isinstance(ai_res, dict) and not ai_res.get('error'):
+                        imp_val = ai_res.get('importe') or ai_res.get('total') or '0,00'
+                        parsed_data = {
+                            'page': page_num + 1,
+                            'tipo': ai_res.get('tipo', 'SALIDA'),
+                            'fecha': ai_res.get('fecha', ''),
+                            'concepto': ai_res.get('concepto') or ai_res.get('emisor_nombre', ''),
+                            'codigo': ai_res.get('nif') or ai_res.get('emisor_cif') or ai_res.get('codigo', ''),
+                            'factura': str(ai_res.get('factura', '')),
+                            'importe': str(imp_val).replace('.', ','),
+                            'base_imponible': ai_res.get('base_imponible', 0.0),
+                            'tipo_impuesto': ai_res.get('tipo_impuesto', 7.0),
+                            'cuota_impuesto': ai_res.get('cuota_impuesto', 0.0),
+                            'confianza': 'ALTA (Gemini Flash Ultra-Fast)',
+                            'img_path': temp_img_path,
+                            'blocks': []
+                        }
+                except Exception as e:
+                    print(f"[OCR] Gemini error: {e}, aplicando fallback local...")
+
+            # 2. Fallback Secundario: Tesseract Local (si no hay API key o falló la red)
+            if not parsed_data:
+                try:
+                    img = Image.open(temp_img_path)
+                    raw_text = pytesseract.image_to_string(img, lang='spa+eng')
+                    blocks = self._extract_blocks(img)
+                    parsed_data = self._parse_document(img, raw_text, page_num + 1)
+                    parsed_data['img_path'] = temp_img_path
+                    parsed_data['blocks'] = blocks
+                    parsed_data = self._apply_ml_patterns(parsed_data, temp_img_path)
+                except Exception as e:
+                    parsed_data = {
+                        'page': page_num + 1,
+                        'tipo': 'SALIDA',
+                        'fecha': '',
+                        'concepto': 'Error de lectura',
+                        'codigo': '',
+                        'factura': '',
+                        'importe': '0,00',
+                        'confianza': 'BAJA',
+                        'img_path': temp_img_path,
+                        'raw_text': str(e),
+                        'blocks': []
+                    }
+
+            results.append(parsed_data)
 
         return results
 
