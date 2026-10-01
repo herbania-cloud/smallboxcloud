@@ -1,0 +1,110 @@
+{
+  "200000": {
+    "concepto_corregido": "JOSE LUIS RODRIGUEZ",
+    "codigo_corregido": "200000",
+    "crop_coords": {
+      "x_pct": 81.83439485586374,
+      "y_pct": 82.2614777957288,
+      "w_pct": 15.54140127388535,
+      "h_pct": 2.7902790279027903
+    },
+    "ult_actualizacion": "2026-08-10 08:43:52",
+    "veces_usado": 3
+  },
+  "A-86212420": {
+    "concepto_corregido": "AENA S.M.E., S.A.",
+    "codigo_corregido": "A-86212420",
+    "crop_coords": {
+      "x_pct": 51.70682730923695,
+      "y_pct": 6.544078480113637,
+      "w_pct": 12.14859437751004,
+      "h_pct": 1.7755681818181819
+    },
+    "ult_actualizacion": "2026-08-09 20:15:28",
+    "veces_usado": 2
+  },
+  "210109": {
+    "concepto_corregido": "ASOCIACION REHOYANDO",
+    "codigo_corregido": "210109",
+    "crop_coords": {
+      "x_pct": 74.3975903614458,
+      "y_pct": 80.6918057528409,
+      "w_pct": 20.38152610441767,
+      "h_pct": 5.042613636363636
+    },
+    "ult_actualizacion": "2026-08-09 12:29:41",
+    "veces_usado": 4
+  },
+  "234408": {
+    "concepto_corregido": "VALENCIA SANTIAGO, LUZ MARINA",
+    "codigo_corregido": "234408",
+    "crop_coords": {
+      "x_pct": 83.03212851405623,
+      "y_pct": 81.89919211647727,
+      "w_pct": 6.526104417670683,
+      "h_pct": 1.9176136363636365
+    },
+    "ult_actualizacion": "2026-08-25 20:37:24",
+    "veces_usado": 5
+  },
+  "JuAN": {
+    "concepto_corregido": "JuAN",
+    "codigo_corregido": "",
+    "crop_coords": {
+      "x_pct": 6.325301204819277,
+      "y_pct": 22.09805575284091,
+      "w_pct": 7.931726907630522,
+      "h_pct": 1.1363636363636365
+    },
+    "ult_actualizacion": "2026-08-10 11:27:52",
+    "veces_usado": 2
+  },
+  "211925": {
+    "concepto_corregido": "LI, XIARORONG",
+    "codigo_corregido": "211925",
+    "crop_coords": {
+      "x_pct": 3.815261044176707,
+      "y_pct": 24.725896661931817,
+      "w_pct": 9.63855421686747,
+      "h_pct": 5.184659090909091
+    },
+    "ult_actualizacion": "2026-08-13 12:01:46",
+    "veces_usado": 1
+  },
+  "210098": {
+    "concepto_corregido": "Venta Cliente Herbania",
+    "codigo_corregido": "210098",
+    "crop_coords": {
+      "x_pct": 81.92771084337349,
+      "y_pct": 82.60941938920455,
+      "w_pct": 7.83132530120482,
+      "h_pct": 2.4857954545454546
+    },
+    "ult_actualizacion": "2026-09-02 10:35:31",
+    "veces_usado": 3
+  },
+  "213912": {
+    "concepto_corregido": "Venta Cliente Herbania",
+    "codigo_corregido": "213912",
+    "crop_coords": {
+      "x_pct": 76.90763052208835,
+      "y_pct": 80.40771484375,
+      "w_pct": 20.481927710843372,
+      "h_pct": 5.255681818181818
+    },
+    "ult_actualizacion": "2026-09-02 10:35:05",
+    "veces_usado": 1
+  },
+  "elektra canarias": {
+    "concepto_corregido": "ELEKTRA CANARIAS",
+    "codigo_corregido": "",
+    "crop_coords": {
+      "x_pct": 17.771084337349397,
+      "y_pct": 1.4304421164772727,
+      "w_pct": 24.899598393574294,
+      "h_pct": 10.369318181818182
+    },
+    "ult_actualizacion": "2026-09-02 10:42:43",
+    "veces_usado": 1
+  }
+}

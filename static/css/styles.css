@@ -1,0 +1,637 @@
+:root {
+    --primary-color: #0d6efd;
+    --primary-hover: #0b5ed7;
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --accent-red: #ef4444;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    line-height: 1.4;
+    padding: 10px;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1920px;
+    margin: 0 auto;
+    height: calc(100vh - 20px);
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.logo-area h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.logo-area p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Layout Principal: 55% para Visor PDF/Imagen, 45% Panel Derecho */
+.main-grid {
+    display: grid;
+    grid-template-columns: 55% 45%;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+}
+
+@media (max-width: 1400px) {
+    .main-grid {
+        grid-template-columns: 50% 50%;
+    }
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.card-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+/* Visor de PDF/Imagen Ampliado y Ajustado */
+.pdf-panel {
+    height: 100%;
+}
+
+.image-viewer-container {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: #020617;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 5px;
+}
+
+.image-viewer {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Panel Derecho: Botonera Operativa Arriba, Lista abajo */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+}
+
+.action-bar-compact {
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Lista de Documentos Extraídos */
+.table-container {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+th, td {
+    padding: 5px 6px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: #0f172a;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.7rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.input-editable {
+    width: 100%;
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-main);
+    padding: 3px 5px;
+    font-size: 0.78rem;
+}
+
+.input-editable:focus {
+    outline: none;
+    border-color: #38bdf8;
+}
+
+/* Botones */
+.btn {
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: var(--primary-hover); }
+
+.btn-success { background-color: var(--accent-green); color: white; }
+.btn-success:hover { background-color: #059669; }
+
+.btn-secondary { background-color: #475569; color: white; }
+.btn-secondary:hover { background-color: #334155; }
+
+.btn-ai { background-color: #8b5cf6; color: white; }
+.btn-ai:hover { background-color: #7c3aed; }
+
+.btn-sm { padding: 3px 6px; font-size: 0.72rem; }
+
+/* Modal emergente para copiar datos a Excel */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    width: 750px;
+    max-width: 90%;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-textarea {
+    width: 100%;
+    height: 250px;
+    background-color: #020617;
+    border: 1px solid var(--border-color);
+    color: #34d399;
+    font-family: monospace;
+    padding: 10px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 5px;
+}
+
+.spinner {
+    border: 3px solid #334155;
+    border-top: 3px solid #38bdf8;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 3px;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ============================================================
+   MATRIZ FORENSE 5 FILAS - ESTILOS COMPLETOS
+   ============================================================ */
+
+.matrix-panel {
+    background-color: var(--card-bg);
+    border: 1px solid #1e40af;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: none; /* oculto hasta que haya datos */
+}
+
+.matrix-panel.visible { display: block; }
+
+.matrix-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 5px;
+}
+
+.matrix-panel-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #4ec9b0;
+}
+
+.matrix-emisor-tag {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+/* La tabla de 5 filas */
+table.matrix-5rows {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.72rem;
+}
+
+/* FILA 1: Campo PDF Origen - encabezado zona documentos */
+tr.row-f1 td {
+    background-color: #1f4e78;
+    color: #ffffff;
+    text-align: center;
+    font-weight: 700;
+    padding: 4px 5px;
+    border-radius: 3px 3px 0 0;
+}
+
+/* FILA 2: Lectura cruda OCR con badge [B0x] clickeable */
+tr.row-f2 td {
+    background-color: #1e293b;
+    color: #4ec9b0;
+    text-align: center;
+    font-weight: 700;
+    padding: 5px 4px;
+    border: 1px solid #334155;
+    cursor: pointer;
+}
+tr.row-f2 td:hover { background-color: #2d4a6a; border-color: #38bdf8; }
+
+/* FILA 3: Destino Excel - encabezado zona ML */
+tr.row-f3 td {
+    background-color: #11385b;
+    color: #9cdcfe;
+    text-align: center;
+    font-weight: 700;
+    padding: 4px 5px;
+    margin-top: 3px;
+}
+
+/* FILA 4: Código mapeado */
+tr.row-f4 td {
+    background-color: #0e639c;
+    color: #ffffff;
+    text-align: center;
+    font-weight: 700;
+    padding: 4px;
+    border: 1px dashed #38bdf8;
+}
+
+/* FILA 5: Valor final editable (ML Feedback) */
+tr.row-f5 td {
+    background-color: #0f2d1f;
+    border: 1px solid #10b981;
+    padding: 3px;
+    border-radius: 0 0 3px 3px;
+}
+
+input.matrix-input {
+    width: 100%;
+    background-color: #0f172a;
+    color: #a3e635;
+    border: 1px solid #334155;
+    padding: 3px 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+    text-align: center;
+    border-radius: 3px;
+}
+input.matrix-input:focus { border-color: #10b981; outline: none; background-color: #1a2f1a; color: #fff; }
+input.matrix-input.focused-field {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.7) !important;
+    background-color: #064e3b !important;
+    color: #ffffff !important;
+}
+input.matrix-input.disabled-field {
+    background-color: #1e293b !important;
+    color: #64748b !important;
+    border-color: #334155 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+input.matrix-input.edited { border-color: #f59e0b !important; color: #fbbf24 !important; background-color: #2d1f00 !important; }
+
+/* Badge [B0x] */
+.block-badge {
+    display: inline-block;
+    background-color: #0e639c;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-right: 3px;
+    font-family: monospace;
+}
+
+/* Banner de Feedback ML */
+.ml-feedback-banner {
+    background-color: #2d1f00;
+    border: 1px solid #f59e0b;
+    color: #fbbf24;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    margin-top: 8px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.ml-feedback-banner.visible { display: flex; }
+
+.btn-save-pattern {
+    background-color: #f59e0b;
+    color: #111;
+    border: none;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-save-pattern:hover { background-color: #d97706; }
+
+/* Panel de bloques disponibles (lista clickeable para reasignar) */
+.blocks-palette {
+    margin-top: 8px;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+.blocks-palette-title {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.blocks-palette-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.block-pill {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    color: #4ec9b0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: monospace;
+    padding: 2px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.block-pill.full-pill {
+    background-color: #059669;
+    border-color: #10b981;
+    color: #ffffff;
+    font-size: 0.74rem;
+    padding: 3px 8px;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+.block-pill.full-pill:hover {
+    background-color: #047857;
+    transform: scale(1.03);
+}
+
+/* ───────────────────────────────────────
+   MODAL DE EXPORTACIÓN
+────────────────────────────────────────*/
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.modal.active {
+    display: flex;
+    opacity: 1;
+}
+.modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: modal-slide-in 0.2s ease;
+}
+@keyframes modal-slide-in {
+    from { transform: translateY(-20px); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* ───────────────────────────────────────
+   INDICADOR DE PÁGINA EN EL VISOR
+────────────────────────────────────────*/
+#imgFilename {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+#imgFilename strong,
+#imgFilename span {
+    color: var(--accent-green);
+}
+
+/* ───────────────────────────────────────
+   SISTEMA DE TOASTS (notificaciones no bloqueantes)
+────────────────────────────────────────*/
+#toastContainer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.toast {
+    pointer-events: all;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    max-width: 360px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    animation: toast-in 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    color: #fff;
+    line-height: 1.4;
+}
+.toast-info  { background: #1e3a5f; border-left: 4px solid #3b82f6; }
+.toast-warn  { background: #3f2a00; border-left: 4px solid #f59e0b; }
+.toast-error { background: #3b0a0a; border-left: 4px solid #ef4444; }
+.toast-hide  { opacity: 0; transform: translateX(20px); }
+
+.toast-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.toast-close:hover { color: #fff; }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ───────────────────────────────────────
+   CAMPO OBJETIVO DEL CROP SELECTOR
+────────────────────────────────────────*/
+.crop-target {
+    outline: 2px solid #38bdf8 !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6) !important;
+    animation: crop-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes crop-pulse {
+    from { box-shadow: 0 0 6px rgba(56, 189, 248, 0.4); }
+    to   { box-shadow: 0 0 16px rgba(56, 189, 248, 0.9); }
+}
+
+/* ───────────────────────────────────────
+   FILA ACTIVA EN LA TABLA DE DOCUMENTOS
+────────────────────────────────────────*/
+#tableBody tr {
+    transition: background 0.15s ease, border-left 0.15s ease;
+    border-left: 3px solid transparent;
+}
+#tableBody tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+#tableBody tr.row-active {
+    background: rgba(78, 201, 176, 0.08) !important;
+    border-left: 3px solid #4ec9b0 !important;
+}
+#tableBody tr.row-active td {
+    color: #e2e8f0;
+}
+
+/* ───────────────────────────────────────
+   BOTONES PEQUEÑOS (nav ▲▼)
+────────────────────────────────────────*/
+.btn-sm {
+    padding: 3px 9px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #475569;
+    background: #1e293b;
+    color: #94a3b8;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-sm:hover {
+    background: #334155;
+    color: #4ec9b0;
+    border-color: #4ec9b0;
+}
+.btn-sm:active {
+    transform: scale(0.93);
+}

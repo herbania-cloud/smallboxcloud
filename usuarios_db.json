@@ -1,0 +1,53 @@
+[
+  {
+    "id": "USR-001",
+    "email": "cluy@caic.es",
+    "nombre": "Carlos Luy",
+    "password_hash": "3c810248ea2231c8d2512ab178d71cd6496d88b493bbdeffa7ffe664cf57ce08",
+    "rol": "admin",
+    "sedes_permitidas": [
+      "arinaga",
+      "lanzarote",
+      "fuerteventura",
+      "prueba"
+    ],
+    "sede_activa": "prueba",
+    "activo": true
+  },
+  {
+    "id": "USR-002",
+    "email": "arinaga@herbania.es",
+    "nombre": "Operario Central Arinaga",
+    "password_hash": "0128146d6237d2c12d30d4ce6de16c781fb7ed5707113a9d1d357ad744c9e275",
+    "rol": "operario",
+    "sedes_permitidas": [
+      "arinaga"
+    ],
+    "sede_activa": "arinaga",
+    "activo": true
+  },
+  {
+    "id": "USR-003",
+    "email": "lanzarote@herbania.es",
+    "nombre": "Operario Delegación Lanzarote",
+    "password_hash": "29142ae6d64f05bdc3053a95484bf7fc785a8abe2ceab073b51f81543df97575",
+    "rol": "operario",
+    "sedes_permitidas": [
+      "lanzarote"
+    ],
+    "sede_activa": "lanzarote",
+    "activo": true
+  },
+  {
+    "id": "USR-004",
+    "email": "fuerteventura@herbania.es",
+    "nombre": "Operario Delegación Fuerteventura",
+    "password_hash": "a9905007af3459305333e344cd5d81d96eea8cdd34cfb7fc714fb3c5d890de34",
+    "rol": "operario",
+    "sedes_permitidas": [
+      "fuerteventura"
+    ],
+    "sede_activa": "fuerteventura",
+    "activo": true
+  }
+]

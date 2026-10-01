@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.bak
+*.tmp
+uploads/*
+!uploads/.gitkeep
+caja_chica_db.json
+.env

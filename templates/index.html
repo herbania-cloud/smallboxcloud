@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDIRA - Lector de Facturas Herbania</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+                <header style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid #334155;">
+            <div class="logo-area" style="display: flex; align-items: center; gap: 15px;">
+                <img src="/static/logo_herbania.png" alt="Herbania Logo" style="height: 40px; border-radius: 6px; object-fit: contain;">
+                <div>
+                    <h1 style="font-size: 1.25rem; font-weight: 700; color: #38bdf8; margin: 0;">SMALLBOXCLOUD</h1>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">Control de Caja Chica & Arqueos — Congelados Herbania | <span style='color:#38bdf8; font-weight:600;'>Desarrollado por CAIC</span></p>
+                </div>
+            </div>
+
+            <!-- Bloque de Usuario Autenticado -->
+            <div style="display: flex; align-items: center; gap: 16px;">
+                {% if usuario %}
+                <div style="text-align: right;">
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                        {{ usuario.nombre }} 
+                        {% if usuario.rol == 'admin' %}
+                        <span style="background: #0284c7; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">Admin</span>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ usuario.email }}</div>
+                </div>
+
+                {% if usuario.rol == 'admin' %}
+                <!-- Administrador: Selector completo de delegaciones con sede de prueba -->
+                <div style="display: flex; align-items: center; gap: 6px; background: #1e293b; padding: 4px 8px; border-radius: 8px; border: 1px solid #0284c7;">
+                    <label style="font-size: 0.72rem; color: #38bdf8; font-weight: bold;">SEDE ACTIVA:</label>
+                    <select id="selectSede" style="background: transparent; color: #f8fafc; border: none; font-size: 0.82rem; font-weight: bold; cursor: pointer; outline: none;">
+                        <option value="prueba" {% if usuario.sede_activa == 'prueba' %}selected{% endif %}>🧪 Delegación Prueba (Admin)</option>
+                        <option value="arinaga" {% if usuario.sede_activa == 'arinaga' %}selected{% endif %}>🏢 Central Arinaga</option>
+                        <option value="lanzarote" {% if usuario.sede_activa == 'lanzarote' %}selected{% endif %}>📦 Delegación Lanzarote</option>
+                        <option value="fuerteventura" {% if usuario.sede_activa == 'fuerteventura' %}selected{% endif %}>❄️ Delegación Fuerteventura</option>
+                    </select>
+                </div>
+                {% else %}
+                <!-- Operario: Sede bloqueada e inmutable -->
+                <div style="background: #1e293b; padding: 6px 12px; border-radius: 8px; border: 1px solid #334155; font-size: 0.82rem; font-weight: bold; color: #a3e635;">
+                    📍 Sede Asignada: {{ usuario.sede_activa|upper }}
+                    <input type="hidden" id="selectSede" value="{{ usuario.sede_activa }}">
+                </div>
+                {% endif %}
+
+                <a href="/logout" class="btn btn-secondary" style="font-size: 0.78rem; padding: 6px 12px; text-decoration: none; border-radius: 6px;">Cerrar Sesión</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Layout Principal -->
+        <div class="main-grid">
+            <!-- PANEL IZQUIERDO: Documento Original con Canvas Selector -->
+            <div class="card pdf-panel">
+                <div class="card-header">
+                    <h2 class="card-title">👁️ Documento Original</h2>
+                    <span id="imgFilename" style="color: #38bdf8; font-size: 0.85rem; font-weight: 600;"></span>
+                </div>
+                <div class="image-viewer-container" id="viewerWrapper" style="position: relative;">
+                    <img id="imageViewer" class="image-viewer" src="" alt="Cargue un archivo para visualizar la primera página">
+                    <canvas id="cropCanvas" style="position: absolute; top: 0; left: 0; cursor: crosshair; pointer-events: auto;"></canvas>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: Acciones + Matriz 5 Filas + Tabla -->
+            <div class="right-panel">
+                <!-- Barra Operativa -->
+                <div class="action-bar-compact">
+                                        <div class="action-buttons">
+                        <button id="btnLoadBatch" class="btn btn-primary">
+                            📁 Cargar Lote
+                        </button>
+                        <button id="btnAddManual" class="btn btn-secondary">
+                            ➕ Ingreso Manual
+                        </button>
+                        <input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+                        <label style="font-size: 0.8rem; font-weight: bold; color: #94a3b8;">SEDE:</label>
+                        <select id="selectSede" style="background: #1e293b; color: #f8fafc; border: 1px solid #3b82f6; border-radius: 6px; padding: 5px 10px; font-size: 0.82rem; font-weight: bold; cursor: pointer;">
+                            <option value="arinaga">🏢 Central Arinaga</option>
+                            <option value="lanzarote">📦 Delegación Lanzarote</option>
+                            <option value="fuerteventura">❄️ Delegación Fuerteventura</option>
+                        </select>
+                        <button id="btnAsentarCaja" class="btn btn-primary" style="background: #059669; border: none; font-weight: bold; padding: 6px 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                            💾 Asentar en Caja Chica
+                        </button>
+                    </div>
+                    <span id="docCount" style="color: var(--text-muted); font-size: 0.8rem;">0 documento(s) acumulados</span>
+                </div>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p style="font-size: 0.82rem; color: #38bdf8;">Procesando lote y acumulando documentos extraídos...</p>
+                </div>
+
+                <!-- ===== MATRIZ FORENSE DE 5 FILAS ===== -->
+                <div class="matrix-panel" id="matrixPanel">
+                    <div class="matrix-panel-header">
+                        <span class="matrix-panel-title">📐 MATRIZ FORENSE DE CONTROL Y ML (5 FILAS)</span>
+                        <span class="matrix-emisor-tag" id="matrixEmisorTag"></span>
+                    </div>
+
+                    <table class="matrix-5rows" id="matrixTable">
+                        <!-- FILA 1: Nombre de campo según el documento original (PDF) -->
+                        <tr class="row-f1" id="matrixF1">
+                            <td>FECHA DOC.</td>
+                            <td>NIF / CÓDIGO (ENTRADAS)</td>
+                            <td>Nº FACTURA</td>
+                            <td>PROVEEDOR / CONCEPTO (SALIDAS)</td>
+                            <td>IMPORTE TOTAL</td>
+                        </tr>
+                        <!-- FILA 2: Lectura cruda OCR + código [B0x] -->
+                        <tr class="row-f2" id="matrixF2">
+                            <td id="mf2-fecha" title="Clic para usar este valor en F5">—</td>
+                            <td id="mf2-codigo" title="Clic para usar este valor en F5">—</td>
+                            <td id="mf2-factura" title="Clic para usar este valor en F5">—</td>
+                            <td id="mf2-concepto" title="Clic para usar este valor en F5">—</td>
+                            <td id="mf2-importe" title="Clic para usar este valor en F5">—</td>
+                        </tr>
+                        <!-- FILA 3: Encabezado columna destino Excel -->
+                        <tr class="row-f3">
+                            <td>Col 9 (FECHA)</td>
+                            <td>Col 3 (CÓDIGO)</td>
+                            <td>Col 6 (FACTURA)</td>
+                            <td>Col 4 (CONCEPTO)</td>
+                            <td>Col 7 (ENTRADA/SALIDA)</td>
+                        </tr>
+                        <!-- FILA 4: Código [B0x] mapeado automáticamente -->
+                        <tr class="row-f4" id="matrixF4">
+                            <td id="mf4-fecha">—</td>
+                            <td id="mf4-codigo">—</td>
+                            <td id="mf4-factura">—</td>
+                            <td id="mf4-concepto">—</td>
+                            <td id="mf4-importe">—</td>
+                        </tr>
+                        <!-- FILA 5: Valor final editable (Nuevo orden de campos) -->
+                        <tr class="row-f5">
+                            <td><input type="text" class="matrix-input" id="mf5-fecha" data-field="fecha" placeholder="dd/mm/yyyy"></td>
+                            <td><input type="text" class="matrix-input" id="mf5-codigo" data-field="codigo" placeholder="Código (Entradas)"></td>
+                            <td><input type="text" class="matrix-input" id="mf5-factura" data-field="factura" placeholder="Nº Factura"></td>
+                            <td><input type="text" class="matrix-input" id="mf5-concepto" data-field="concepto" placeholder="Concepto / Proveedor"></td>
+                            <td><input type="text" class="matrix-input" id="mf5-importe" data-field="importe" placeholder="0,00" style="color:#a3e635;"></td>
+                        </tr>
+                    </table>
+
+                    <!-- Paleta de bloques detectados por área seleccionada -->
+                    <div class="blocks-palette" id="blocksPalette">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span class="blocks-palette-title" id="blocksPaletteTitle">🔍 Área Seleccionada: Dibuje un recuadro sobre el PDF a la izquierda</span>
+                            <button class="btn btn-sm btn-primary" id="btnStartCrop" style="font-size: 0.7rem; padding: 2px 8px;">🎯 Seleccionar Área</button>
+                        </div>
+                        <div class="blocks-palette-items" id="blocksPaletteItems">
+                            <span style="color: #64748b; font-size: 0.72rem; font-style: italic;">Sin recuadro activo. Haga clic en <b>"🎯 Seleccionar Área"</b> o dibuje directamente sobre la factura.</span>
+                        </div>
+                    </div>
+
+                    <!-- Banner de feedback ML -->
+                    <div class="ml-feedback-banner" id="mlFeedbackBanner">
+                        <span id="mlFeedbackText">🧠 <b>ML Feedback:</b> Valor corregido detectado.</span>
+                        <button class="btn-save-pattern" id="btnSavePattern">💾 Guardar Patrón</button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Datos Extraídos -->
+                <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="card-header">
+                        <h2 class="card-title">📋 Documentos Extraídos (Edición Directa)</h2>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <!-- Navegación entre documentos -->
+                            <div id="docNavBar" style="display:none; align-items:center; gap:4px; background:#1e293b; border:1px solid #334155; border-radius:6px; padding:3px 8px;">
+                                <button id="btnNavUp"   class="btn btn-sm btn-secondary" title="Documento anterior (flecha arriba)">▲</button>
+                                <span   id="docNavLabel" style="font-size:0.78rem; color:#94a3b8; min-width:60px; text-align:center;">— / —</span>
+                                <button id="btnNavDown" class="btn btn-sm btn-secondary" title="Documento siguiente (flecha abajo)">▼</button>
+                            </div>
+                            <button id="btnExportModal" class="btn btn-success" style="display: none;">📋 Exportar Datos a Excel</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30px; text-align: center;"><input type="checkbox" id="checkAllDocs" checked title="Seleccionar/Desmarcar todos para exportar"></th>
+                                    <th style="width: 35px;">Ver</th>
+                                    <th style="width: 85px;">Tipo</th>
+                                    <th style="width: 95px;">Fecha</th>
+                                    <th style="width: 120px;">Código (Entradas)</th>
+                                    <th style="width: 110px;">Nº Factura / Ticket</th>
+                                    <th>Concepto (Salidas / Comodín)</th>
+                                    <th style="width: 100px;">Importe Total (€)</th>
+                                    <th style="width: 55px;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                        Presione <strong>"📂 Cargar Lote"</strong> para añadir facturas o <strong>"➕ Ingreso Manual"</strong> para escribir una línea.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EXPORTACIÓN (CON PESTAÑAS ENTRADAS / SALIDAS / TODOS) -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>📋 Exportar Datos para Excel de Caja Chica</h3>
+                <button class="btn btn-secondary" id="btnCloseModal" style="padding: 4px 10px;">✕ Cerrar</button>
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 10px 0;">
+                Seleccione la pestaña deseada y presione <b>"Copiar al Portapapeles"</b> para pegar directamente en la hoja de Excel.
+            </p>
+
+            <!-- Pestañas de Navegación -->
+            <div class="export-tabs" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button class="tab-btn active" id="tabEntradas" style="padding: 8px 16px; background: #064e3b; color: #a7f3d0; border: 1px solid #10b981; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    🟢 ENTRADAS (Cobros)
+                </button>
+                <button class="tab-btn" id="tabSalidas" style="padding: 8px 16px; background: #1e293b; color: #fca5a5; border: 1px solid #475569; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    🔴 SALIDAS (Gastos)
+                </button>
+                <button class="tab-btn" id="tabTodos" style="padding: 8px 16px; background: #1e293b; color: #93c5fd; border: 1px solid #475569; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    📋 TODOS COMBINADOS
+                </button>
+            </div>
+
+            <textarea id="modalTextarea" readonly rows="12" style="width:100%; font-family: monospace; background:#0f172a; color:#4ec9b0; border:1px solid #334155; padding:10px; border-radius:4px; font-size:0.82rem; white-space: pre; overflow-x: auto;"></textarea>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                <span id="tabItemCount" style="font-size: 0.78rem; color: #94a3b8;">0 registro(s)</span>
+                <button class="btn btn-primary" id="btnCopyClipboard" style="background: #10b981;">📋 Copiar al Portapapeles</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
