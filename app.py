@@ -51,6 +51,11 @@ def _get_usuarios():
             return []
     return []
 
+def _save_usuarios(usuarios):
+    db_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'usuarios_db.json')
+    with open(db_file, 'w', encoding='utf-8') as f:
+        json.dump(usuarios, f, indent=4, ensure_ascii=False)
+
 @app.before_request
 def require_login():
     # Rutas públicas sin necesidad de login
@@ -224,6 +229,100 @@ def asentar_caja():
         'num_tickets': res.get('num_tickets'),
         'total': res.get('total')
     })
+
+
+# ==============================================================================
+# MANTENIMIENTO DEL SISTEMA: GESTION DE USUARIOS (SOLO ADMINISTRADOR)
+# ==============================================================================
+@app.route('/api/admin/usuarios', methods=['GET'])
+def api_get_usuarios():
+    user = session.get('user')
+    if not user or user.get('rol') != 'admin':
+        return jsonify({'error': 'No autorizado. Se requiere rol de Administrador.'}), 403
+    
+    usuarios = _get_usuarios()
+    safe_list = []
+    for u in usuarios:
+        safe_list.append({
+            'id': u.get('id'),
+            'nombre': u.get('nombre'),
+            'email': u.get('email'),
+            'rol': u.get('rol'),
+            'sedes_permitidas': u.get('sedes_permitidas', []),
+            'sede_activa': u.get('sede_activa', ''),
+            'activo': u.get('activo', True)
+        })
+    return jsonify({'usuarios': safe_list})
+
+@app.route('/api/admin/usuarios', methods=['POST'])
+def api_create_usuario():
+    user = session.get('user')
+    if not user or user.get('rol') != 'admin':
+        return jsonify({'error': 'No autorizado. Se requiere rol de Administrador.'}), 403
+
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    nombre = (data.get('nombre') or '').strip()
+    password = data.get('password') or ''
+    rol = data.get('rol', 'operario')
+    sedes = data.get('sedes_permitidas', [])
+
+    if not email or not nombre or not password:
+        return jsonify({'error': 'Faltan campos obligatorios (Nombre, Email, Contraseña).'}), 400
+
+    if not isinstance(sedes, list) or len(sedes) == 0:
+        return jsonify({'error': 'Debe asignar al menos una delegación.'}), 400
+
+    usuarios = _get_usuarios()
+    if any(u['email'].lower() == email for u in usuarios):
+        return jsonify({'error': f'El correo {email} ya existe en el sistema.'}), 409
+
+    existing_ids = [u.get('id', '') for u in usuarios]
+    next_num = len(usuarios) + 1
+    new_id = f'USR-{next_num:03d}'
+    while new_id in existing_ids:
+        next_num += 1
+        new_id = f'USR-{next_num:03d}'
+
+    new_user = {
+        'id': new_id,
+        'email': email,
+        'nombre': nombre,
+        'password_hash': _hash_pass(password),
+        'rol': rol,
+        'sedes_permitidas': sedes,
+        'sede_activa': sedes[0],
+        'activo': True
+    }
+    usuarios.append(new_user)
+    _save_usuarios(usuarios)
+
+    return jsonify({'success': True, 'usuario': {
+        'id': new_user['id'],
+        'nombre': new_user['nombre'],
+        'email': new_user['email'],
+        'rol': new_user['rol'],
+        'sedes_permitidas': new_user['sedes_permitidas'],
+        'activo': True
+    }})
+
+@app.route('/api/admin/usuarios/<user_id>', methods=['DELETE'])
+def api_delete_usuario(user_id):
+    user = session.get('user')
+    if not user or user.get('rol') != 'admin':
+        return jsonify({'error': 'No autorizado.'}), 403
+
+    usuarios = _get_usuarios()
+    target = next((u for u in usuarios if u.get('id') == user_id), None)
+    if not target:
+        return jsonify({'error': 'Usuario no encontrado.'}), 404
+
+    if target.get('email', '').lower() == 'cluy@caic.es' or target.get('id') == user.get('id'):
+        return jsonify({'error': 'No está permitido eliminar al Administrador Principal.'}), 400
+
+    usuarios = [u for u in usuarios if u.get('id') != user_id]
+    _save_usuarios(usuarios)
+    return jsonify({'success': True, 'deleted_id': user_id})
 
 if __name__ == '__main__':
     PORT = 5000

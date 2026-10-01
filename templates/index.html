@@ -54,8 +54,29 @@
             </div>
         </header>
 
+        {% if usuario.rol == 'admin' %}
+        <!-- Barra de Solapas / Pestañas para Administrador (Ambiente Prueba / Mantenimiento) -->
+        <div class="admin-nav-bar" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: rgba(15, 23, 42, 0.9); padding: 8px 16px; border-radius: 8px; border: 1px solid #334155;">
+            <div style="display: flex; gap: 10px;">
+                <button id="navTabOperaciones" onclick="switchMainTab('operaciones')" style="display: flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 0.84rem; cursor: pointer; background: #0284c7; color: white; border: 1px solid #38bdf8; transition: all 0.2s;">
+                    📑 Arqueo de Caja & Documentos
+                </button>
+                <button id="navTabMantenimiento" onclick="switchMainTab('mantenimiento')" style="display: flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 0.84rem; cursor: pointer; background: #1e293b; color: #94a3b8; border: 1px solid #334155; transition: all 0.2s;">
+                    ⚙️ Mantenimiento del Sistema (Usuarios)
+                    {% if usuario.sede_activa == 'prueba' %}
+                    <span style="background: #9333ea; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800;">Modo Admin</span>
+                    {% endif %}
+                </button>
+            </div>
+            <div style="font-size: 0.75rem; color: #94a3b8;">
+                Sede Activa de Trabajo: <strong style="color: #38bdf8;">{{ usuario.sede_activa|upper }}</strong>
+            </div>
+        </div>
+        {% endif %}
+
+
         <!-- Layout Principal -->
-        <div class="main-grid">
+        <div class="main-grid" id="viewOperaciones">
             <!-- PANEL IZQUIERDO: Documento Original con Canvas Selector -->
             <div class="card pdf-panel">
                 <div class="card-header">
@@ -205,6 +226,115 @@
             </div>
         </div>
     </div>
+
+    
+        <!-- ============================================================================== -->
+        <!-- VISTA DE MANTENIMIENTO DEL SISTEMA: GESTIÓN DE USUARIOS Y ACCESOS              -->
+        <!-- ============================================================================== -->
+        <div id="viewMantenimiento" style="display: none; width: 100%; flex: 1; overflow-y: auto;">
+            <div style="display: grid; grid-template-columns: 380px 1fr; gap: 20px; height: 100%;">
+                
+                <!-- Columna Izquierda: Formulario Nuevo Usuario -->
+                <div class="card" style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="border-bottom: 1px solid #334155; padding-bottom: 10px;">
+                        <h3 style="font-size: 1rem; color: #38bdf8; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            ➕ Registrar Nuevo Usuario
+                        </h3>
+                        <p style="font-size: 0.75rem; color: #94a3b8; margin: 4px 0 0 0;">
+                            Cree accesos con aislamiento por delegación o permisos de administración.
+                        </p>
+                    </div>
+
+                    <form id="formNuevoUsuario" onsubmit="crearUsuarioAdmin(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label style="font-size: 0.78rem; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 4px;">Nombre y Apellidos:</label>
+                            <input type="text" id="newNombre" required placeholder="Ej: Juan Pérez" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; outline: none;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.78rem; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 4px;">Correo Corporativo:</label>
+                            <input type="email" id="newEmail" required placeholder="Ej: operario@herbania.es" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; outline: none;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.78rem; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 4px;">Contraseña de Acceso:</label>
+                            <input type="password" id="newPassword" required placeholder="Mínimo 6 caracteres" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; outline: none;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.78rem; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 4px;">Rol en el Sistema:</label>
+                            <select id="newRol" onchange="toggleRolSedes(this.value)" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; outline: none; cursor: pointer;">
+                                <option value="operario">👷 Operario (Restringido a Sede asignada)</option>
+                                <option value="admin">🛡️ Administrador (Acceso total & Delegación Prueba)</option>
+                            </select>
+                        </div>
+
+                        <div id="wrapperSedesAsignadas">
+                            <label style="font-size: 0.78rem; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 6px;">Delegación Autorizada:</label>
+                            <div style="display: flex; flex-direction: column; gap: 6px; background: #0f172a; padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
+                                <label style="font-size: 0.8rem; color: #f8fafc; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="newSedes" value="arinaga" checked> 🏢 Central Arinaga
+                                </label>
+                                <label style="font-size: 0.8rem; color: #f8fafc; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="newSedes" value="lanzarote"> 📦 Delegación Lanzarote
+                                </label>
+                                <label style="font-size: 0.8rem; color: #f8fafc; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="newSedes" value="fuerteventura"> ❄️ Delegación Fuerteventura
+                                </label>
+                                <label id="labelPruebaSede" style="font-size: 0.8rem; color: #c084fc; display: none; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="newSedes" value="prueba"> 🧪 Delegación Prueba (Admin)
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btnGuardarUsuario" class="btn btn-primary" style="margin-top: 8px; background: #0284c7; border: none; font-weight: bold; padding: 8px 16px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                            💾 Crear Usuario
+                        </button>
+                        <div id="usuarioMsg" style="font-size: 0.78rem; text-align: center; display: none; padding: 6px; border-radius: 4px;"></div>
+                    </form>
+                </div>
+
+                <!-- Columna Derecha: Tabla de Usuarios del Sistema -->
+                <div class="card" style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 18px; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 12px;">
+                        <div>
+                            <h3 style="font-size: 1rem; color: #38bdf8; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                👥 Usuarios y Permisos del Sistema
+                            </h3>
+                            <p style="font-size: 0.75rem; color: #94a3b8; margin: 4px 0 0 0;">
+                                Cuentas autorizadas para el control de arqueos en la nube.
+                            </p>
+                        </div>
+                        <button onclick="cargarUsuariosAdmin()" class="btn btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; background: #334155; color: #f8fafc; border-radius: 6px; border: 1px solid #475569; cursor: pointer;">
+                            🔄 Actualizar Lista
+                        </button>
+                    </div>
+
+                    <div style="flex: 1; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                            <thead>
+                                <tr style="background: #0f172a; color: #94a3b8; border-bottom: 1px solid #334155;">
+                                    <th style="padding: 10px 12px;">ID</th>
+                                    <th style="padding: 10px 12px;">Usuario / Nombre</th>
+                                    <th style="padding: 10px 12px;">Correo</th>
+                                    <th style="padding: 10px 12px;">Rol</th>
+                                    <th style="padding: 10px 12px;">Sedes Autorizadas</th>
+                                    <th style="padding: 10px 12px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaUsuariosBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #94a3b8; padding: 25px;">
+                                        Cargando usuarios...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
 
     <!-- MODAL DE EXPORTACIÓN (CON PESTAÑAS ENTRADAS / SALIDAS / TODOS) -->
     <div class="modal" id="exportModal">
