@@ -82,12 +82,6 @@
                         <input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
-                        <label style="font-size: 0.8rem; font-weight: bold; color: #94a3b8;">SEDE:</label>
-                        <select id="selectSede" style="background: #1e293b; color: #f8fafc; border: 1px solid #3b82f6; border-radius: 6px; padding: 5px 10px; font-size: 0.82rem; font-weight: bold; cursor: pointer;">
-                            <option value="arinaga">🏢 Central Arinaga</option>
-                            <option value="lanzarote">📦 Delegación Lanzarote</option>
-                            <option value="fuerteventura">❄️ Delegación Fuerteventura</option>
-                        </select>
                         <button id="btnAsentarCaja" class="btn btn-primary" style="background: #059669; border: none; font-weight: bold; padding: 6px 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                             💾 Asentar en Caja Chica
                         </button>
@@ -246,5 +240,25 @@
     </div>
 
     <script src="/static/js/main.js"></script>
+
+    <script>
+        // Sincronizar cambio de sede para Administrador
+        const selectSedeHeader = document.getElementById('selectSede');
+        if (selectSedeHeader && selectSedeHeader.tagName === 'SELECT') {
+            selectSedeHeader.addEventListener('change', async (e) => {
+                try {
+                    await fetch('/api/cambiar_sede', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({sede: e.target.value})
+                    });
+                    window.location.reload();
+                } catch (err) {
+                    console.error('Error al cambiar de sede:', err);
+                }
+            });
+        }
+    </script>
 </body>
+
 </html>
